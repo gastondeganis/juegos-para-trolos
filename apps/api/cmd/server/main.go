@@ -32,12 +32,30 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("write error:", err)
 	}
 
-	room := roomManager.CreateRoom()
+	for {
+		var msg map[string]string
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			log.Println("read error:", err)
+			return
+		}
 
-	err = conn.WriteJSON(map[string]string{
-		"event": "room_created",
-		"code":  room.Code,
-	})
+		event := msg["event"]
+
+		switch event {
+		case "create_room":
+			room := roomManager.CreateRoom()
+
+			err = conn.WriteJSON(map[string]string{
+				"event": "room_created",
+				"code":  room.Code,
+			})
+			if err != nil {
+				log.Println("write error:", err)
+				return
+			}
+		}
+	}
 }
 
 var roomManager = game.NewRoomManager()
