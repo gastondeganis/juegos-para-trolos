@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gastondeganis/juegos-para-trolos/api/internal/game"
 	"github.com/gorilla/websocket"
 )
 
@@ -30,7 +31,16 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("write error:", err)
 	}
+
+	room := roomManager.CreateRoom()
+
+	err = conn.WriteJSON(map[string]string{
+		"event": "room_created",
+		"code":  room.Code,
+	})
 }
+
+var roomManager = game.NewRoomManager()
 
 func main() {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
