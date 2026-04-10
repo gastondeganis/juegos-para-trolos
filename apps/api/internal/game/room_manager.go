@@ -34,6 +34,14 @@ func (rm *RoomManager) CreateRoom() *Room {
 	return room
 }
 
+func (rm *RoomManager) GetRoom(code string) (*Room, bool) {
+	rm.mu.RLock()
+	defer rm.mu.RUnlock()
+
+	room, exists := rm.rooms[code]
+	return room, exists
+}
+
 func generateCode() string {
 	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	code := make([]byte, 6)

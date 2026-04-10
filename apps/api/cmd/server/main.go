@@ -54,6 +54,26 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println("write error:", err)
 				return
 			}
+		case "join_room":
+			code := msg["code"]
+
+			room, exists := roomManager.GetRoom(code)
+			if !exists {
+				conn.WriteJSON(map[string]string{
+					"event":   "error",
+					"message": "sala no encontrada",
+				})
+				continue
+			}
+
+			err = conn.WriteJSON(map[string]string{
+				"event": "room_joined",
+				"code":  room.Code,
+			})
+			if err != nil {
+				log.Println("write error:", err)
+				return
+			}
 		}
 	}
 }
