@@ -1,16 +1,8 @@
 package game
 
-import (
-	"math/rand"
-	"sync"
-)
-
-type Room struct {
-	Code string
-}
+import "math/rand"
 
 type RoomManager struct {
-	mu    sync.RWMutex
 	rooms map[string]*Room
 }
 
@@ -20,24 +12,17 @@ func NewRoomManager() *RoomManager {
 	}
 }
 
-func (rm *RoomManager) CreateRoom() *Room {
-	rm.mu.Lock()
-	defer rm.mu.Unlock()
-
+func (rm *RoomManager) CreateRoom(host Player) *Room {
 	code := generateCode()
-
 	room := &Room{
-		Code: code,
+		Code:    code,
+		Players: []Player{host},
 	}
-
 	rm.rooms[code] = room
 	return room
 }
 
 func (rm *RoomManager) GetRoom(code string) (*Room, bool) {
-	rm.mu.RLock()
-	defer rm.mu.RUnlock()
-
 	room, exists := rm.rooms[code]
 	return room, exists
 }
