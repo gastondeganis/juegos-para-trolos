@@ -86,6 +86,14 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				Conn: conn,
 			})
 
+			joinResponse := response.ResponseMessage[response.PlayerRoomResponse]{
+				Event: "room_joined",
+				Data: response.PlayerRoomResponse{
+					RoomCode: room.Code,
+				},
+			}
+			conn.WriteJSON(joinResponse)
+
 			BroadcastPlayers(room)
 		}
 	}

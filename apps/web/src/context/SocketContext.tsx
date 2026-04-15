@@ -19,6 +19,7 @@ interface SocketContextType {
   errorMessage: string;
   createRoom: (name: string) => void;
   joinRoom: (name: string, code: string) => void;
+  clearError: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -29,40 +30,50 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
 
+  const clearError = () => {
+    setErrorMessage("");
+  };
+
   useEffect(() => {
     const socket = connectSocket((data) => {
-      // Tu lógica de eventos que ya tenías
-      if (
-        (data.event === "room_created" || data.event === "room_joined") &&
-        data.roomCode
-      ) {
-        setRoomCode(data.roomCode);
-      }
-      if (data.event === "players_updated") {
-        setPlayerList(data.players ?? []);
-      }
-      if (data.event === "error") {
-        setErrorMessage(data.message ?? "Ocurrió un error inesperado");
+      switch (data.event) {
+        case "room_created":
+        case "room_joined":
+          setRoomCode(data.roomCode || "");
+          // IMPORTANTE: El backend ya manda la lista con el host/jugador inicial acá
+          // Usamos data.players porque socket.ts lo mapea desde el objeto data del backend
+          if (data.players) {
+            setPlayerList(data.players);
+          }
+          setErrorMessage("");
+          break;
       }
     });
-
     socketRef.current = socket;
     return () => socket.close();
   }, []);
 
   const createRoom = (name: string) => {
-    if (socketRef.current)
-      sendMessage(socketRef.current, "create_room", { player_name: name });
+    if (socketRef.current) {
+      // Limpiamos estados anteriores para que la nueva sala empiece de cero
+      setRoomCode("");
+      setPlayerList([]);
+      setErrorMessage("");
+      sendMessage(socketRef.current, "create_room", { host: name });
+    }
   };
 
   const joinRoom = (name: string, code: string) => {
-    socketRef.current?.send(
-      JSON.stringify({
-        event: "player_joined",
+    if (socketRef.current) {
+      // Limpiamos estados anteriores
+      setRoomCode("");
+      setPlayerList([]);
+      setErrorMessage("");
+      sendMessage(socketRef.current, "player_joined", {
         player_name: name,
         room_code: code,
-      })
-    );
+      });
+    }
   };
 
   return (
@@ -74,6 +85,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         errorMessage,
         createRoom,
         joinRoom,
+        clearError,
       }}
     >
       {children}
