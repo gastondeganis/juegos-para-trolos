@@ -6,7 +6,8 @@ import (
 )
 
 func BroadcastPlayers(room *game.Room) {
-
+	room.Mu.Lock()
+	defer room.Mu.Unlock()
 	for _, player := range room.Players {
 		player.Conn.WriteJSON(response.ResponseMessage[response.PlayerRoomResponse]{
 			Event: "players_updated",

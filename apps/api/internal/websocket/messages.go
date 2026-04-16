@@ -8,10 +8,12 @@ type Message struct {
 }
 
 type CreateRoomData struct {
-	Host string `json:"host"`
+	Host   string `json:"host"`
+	HostId string `json:"host_id"`
 }
 
 type JoinRoomData struct {
 	PlayerName string `json:"player_name"`
+	PlayerID   string `json:"player_id"`
 	RoomCode   string `json:"room_code"`
 }

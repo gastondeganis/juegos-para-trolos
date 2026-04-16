@@ -47,6 +47,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 
 			host := game.Player{
 				Name: data.Host,
+				ID:   data.HostId,
 				Host: true,
 				Conn: conn,
 			}
@@ -80,11 +81,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			room.Players = append(room.Players, game.Player{
-				Name: data.PlayerName,
-				Host: false,
-				Conn: conn,
-			})
+			room.AddOrUpdatePlayer(data.PlayerID, data.PlayerName, conn)
 
 			joinResponse := response.ResponseMessage[response.PlayerRoomResponse]{
 				Event: "room_joined",
