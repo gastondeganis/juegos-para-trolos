@@ -6,8 +6,10 @@ import React, {
   useRef,
 } from "react";
 import { connectSocket, sendMessage } from "../services/socket";
+import { getOrCreatePlayerId } from "../services/utils";
 
 export type Player = {
+  id: string;
   name: string;
   host: boolean;
 };
@@ -17,6 +19,7 @@ interface SocketContextType {
   roomCode: string;
   playersList: Player[];
   errorMessage: string;
+  isConnected: boolean;
   createRoom: (name: string) => void;
   joinRoom: (name: string, code: string) => void;
   clearError: () => void;
@@ -29,6 +32,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [playersList, setPlayerList] = useState<Player[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   const clearError = () => {
     setErrorMessage("");
@@ -59,16 +63,32 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
           break;
       }
     });
+    socket.onopen = () => {
+      console.log("🟢 Conexión establecida");
+      setIsConnected(true);
+    };
+
+    socket.onclose = () => {
+      console.log("🔴 Conexión cerrada");
+      setIsConnected(false);
+    };
+
     socketRef.current = socket;
     return () => socket.close();
   }, []);
+
   const createRoom = (name: string) => {
     if (socketRef.current) {
       // Limpiamos estados anteriores para que la nueva sala empiece de cero
       setRoomCode("");
       setPlayerList([]);
       setErrorMessage("");
-      sendMessage(socketRef.current, "create_room", { host: name });
+      const hostId = getOrCreatePlayerId();
+      localStorage.setItem("playerName", name);
+      sendMessage(socketRef.current, "create_room", {
+        host: name,
+        host_id: hostId,
+      });
     }
   };
 
@@ -78,7 +98,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setRoomCode("");
       setPlayerList([]);
       setErrorMessage("");
+      const playerId = getOrCreatePlayerId();
+      localStorage.setItem("playerName", name);
+
       sendMessage(socketRef.current, "player_joined", {
+        player_id: playerId,
         player_name: name,
         room_code: code,
       });
@@ -92,6 +116,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         roomCode,
         playersList,
         errorMessage,
+        isConnected,
         createRoom,
         joinRoom,
         clearError,

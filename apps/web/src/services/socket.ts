@@ -20,17 +20,21 @@ interface RawResponse {
 
 // Ahora sendMessage recibe el nombre del evento y los datos por separado
 // para armar el sobre antes de mandarlo
-export function sendMessage(
-  socket: WebSocket,
-  event: string,
-  payload: any = {}
-) {
-  const message = {
-    event: event,
-    data: payload,
-  };
-  socket.send(JSON.stringify(message));
-}
+export const sendMessage = (socket: WebSocket, event: string, data: any) => {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ event, data }));
+  } else if (socket.readyState === WebSocket.CONNECTING) {
+    // Si está conectando, esperamos un poquito y reintentamos
+    console.warn(
+      `⏳ Socket conectando... reintentando envío de ${event} en 500ms`
+    );
+    setTimeout(() => sendMessage(socket, event, data), 500);
+  } else {
+    console.error(
+      `🔴 No se pudo enviar ${event}: socket cerrado (estado: ${socket.readyState})`
+    );
+  }
+};
 
 export function connectSocket(onMessage: (data: SocketMessage) => void) {
   const socket = new WebSocket("ws://localhost:8080/ws");
