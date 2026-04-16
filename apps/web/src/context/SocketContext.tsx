@@ -40,19 +40,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         case "room_created":
         case "room_joined":
           setRoomCode(data.roomCode || "");
-          // IMPORTANTE: El backend ya manda la lista con el host/jugador inicial acá
-          // Usamos data.players porque socket.ts lo mapea desde el objeto data del backend
           if (data.players) {
             setPlayerList(data.players);
           }
           setErrorMessage("");
+          break;
+
+        case "players_updated":
+          if (data.players) {
+            setPlayerList(data.players);
+          }
+          break;
+
+        // Opcional: manejar errores que mandás desde el backend
+        case "player_joined_error":
+        case "room_not_found":
+          setErrorMessage(data.message || "Error al unirse a la sala");
           break;
       }
     });
     socketRef.current = socket;
     return () => socket.close();
   }, []);
-
   const createRoom = (name: string) => {
     if (socketRef.current) {
       // Limpiamos estados anteriores para que la nueva sala empiece de cero
