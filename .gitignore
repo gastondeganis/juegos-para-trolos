@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment — solo .env.example se commitea
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+
+# Go
+apps/api/tmp/
