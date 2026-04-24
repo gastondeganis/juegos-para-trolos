@@ -33,8 +33,18 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		if currentRoom != nil && currentPlayerID != "" {
-			currentRoom.RemovePlayer(currentPlayerID)
-			BroadcastPlayers(currentRoom)
+			rem := currentRoom.RemovePlayer(currentPlayerID)
+			if rem {
+				ok := roomManager.DeleteRoom(currentRoom.Code)
+				if !ok {
+					log.Printf("delete room %s failed", currentRoom.Code)
+					return
+				}
+
+				log.Printf("deleted room %s", currentRoom.Code)
+			} else {
+				BroadcastPlayers(currentRoom)
+			}
 		}
 	}()
 
@@ -127,19 +137,28 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			room.RemovePlayer(data.PlayerID)
+			isEmpty := room.RemovePlayer(data.PlayerID)
 			currentRoom = nil
 			currentPlayerID = ""
-			deletedResponse := response.ResponseMessage[response.PlayerRoomResponse]{
-				Event: "room_left",
-				Data: response.PlayerRoomResponse{
-					RoomCode: room.Code,
-					Players:  room.Players,
-				},
-			}
-			conn.WriteJSON(deletedResponse)
 
-			BroadcastPlayers(room)
+			if isEmpty {
+				roomManager.DeleteRoom(room.Code)
+				log.Printf("sala %s eliminada (vacía)", room.Code)
+				conn.WriteJSON(response.ResponseMessage[response.PlayerRoomResponse]{
+					Event: "room_deleted",
+					Data: response.PlayerRoomResponse{
+						RoomCode: room.Code,
+					}})
+			} else {
+				conn.WriteJSON(response.ResponseMessage[response.PlayerRoomResponse]{
+					Event: "room_left",
+					Data: response.PlayerRoomResponse{
+						RoomCode: room.Code,
+						Players:  room.Players,
+					}})
+
+				BroadcastPlayers(room)
+			}
 		}
 	}
 }

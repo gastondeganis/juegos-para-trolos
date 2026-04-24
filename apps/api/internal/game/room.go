@@ -6,15 +6,24 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type RoomStatus string
+
+const (
+	WAITING  RoomStatus = "waiting"
+	PLAYING  RoomStatus = "playing"
+	FINISHED RoomStatus = "finished"
+)
+
 type Room struct {
-	Code    string   `json:"code"`
-	Players []Player `json:"players"`
+	Code    string     `json:"code"`
+	Players []Player   `json:"players"`
+	Status  RoomStatus `json:"status"`
 	Mu      sync.RWMutex
 }
 
 func (r *Room) AddOrUpdatePlayer(id string, name string, conn *websocket.Conn) {
-	r.Mu.RLock()
-	defer r.Mu.RUnlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 
 	for i := range r.Players {
 		if r.Players[i].ID == id {
@@ -32,18 +41,23 @@ func (r *Room) AddOrUpdatePlayer(id string, name string, conn *websocket.Conn) {
 	})
 }
 
-func (r *Room) RemovePlayer(id string) {
+func (r *Room) RemovePlayer(id string) bool {
 	r.Mu.Lock()
 	defer r.Mu.Unlock()
 
 	for i := range r.Players {
 		if r.Players[i].ID == id {
+			isHost := r.Players[i].Host
 			p := append(r.Players[:i], r.Players[i+1:]...)
-			if r.Players[i].Host {
+			if len(p) == 0 {
+				return true
+			}
+			if isHost {
 				p[0].Host = true
 			}
 			r.Players = p
-			return
+			return false
 		}
 	}
+	return false
 }
