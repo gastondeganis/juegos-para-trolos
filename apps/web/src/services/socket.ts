@@ -37,7 +37,7 @@ export const sendMessage = (socket: WebSocket, event: string, data: any) => {
 };
 
 export function connectSocket(onMessage: (data: SocketMessage) => void) {
-  const socket = new WebSocket("ws://localhost:8080/ws");
+  const socket = new WebSocket(import.meta.env.VITE_WS_URL);
 
   socket.onopen = () => {
     console.log("🟢 socket conectado");
