@@ -1,0 +1,140 @@
+.lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 440px;
+}
+
+/* ── Room code card ────────────────────────────────────────── */
+.lobby__room-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px 32px;
+  text-align: center;
+  width: 100%;
+}
+
+.lobby__room-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.lobby__room-code {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--text-heading);
+  font-family: ui-monospace, monospace;
+}
+
+/* ── Waiting status ────────────────────────────────────────── */
+.lobby__status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── Player list ───────────────────────────────────────────── */
+.lobby__players {
+  list-style: none;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lobby__player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: border-color var(--transition);
+}
+
+.lobby__player--self {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(99,102,241,0.08) 100%);
+  color: var(--text-heading);
+}
+
+.lobby__player-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.lobby__player--self .lobby__player-avatar {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.lobby__player-name {
+  flex: 1;
+}
+
+.lobby__player-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lobby__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lobby__badge--self {
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid rgba(99,102,241,0.3);
+}
+
+.lobby__badge--host {
+  background: rgba(234, 179, 8, 0.12);
+  color: #eab308;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* ── Action buttons ────────────────────────────────────────── */
+.lobby__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ── Modal form (join name) ────────────────────────────────── */
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

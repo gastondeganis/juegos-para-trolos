@@ -7,12 +7,9 @@ import React, {
 } from "react";
 import { connectSocket, sendMessage } from "../services/socket";
 import { getOrCreatePlayerId } from "../services/utils";
+import type { Player } from "../types";
 
-export type Player = {
-  id: string;
-  name: string;
-  host: boolean;
-};
+export type { Player };
 
 interface SocketContextType {
   socket: WebSocket | null;
@@ -22,6 +19,7 @@ interface SocketContextType {
   isConnected: boolean;
   createRoom: (name: string) => void;
   joinRoom: (name: string, code: string) => void;
+  removePlayer: (playerID: string, roomCode: string) => void;
   clearError: () => void;
 }
 
@@ -33,48 +31,81 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const shouldReconnectRef = useRef(true);
 
   const clearError = () => {
     setErrorMessage("");
   };
 
   useEffect(() => {
-    const socket = connectSocket((data) => {
-      switch (data.event) {
-        case "room_created":
-        case "room_joined":
-          setRoomCode(data.roomCode || "");
-          if (data.players) {
-            setPlayerList(data.players);
-          }
-          setErrorMessage("");
-          break;
+    function connect() {
+      const socket = connectSocket((data) => {
+        switch (data.event) {
+          case "room_created":
+          case "room_joined":
+            setRoomCode(data.roomCode || "");
+            if (data.players) {
+              setPlayerList(data.players);
+            }
+            setErrorMessage("");
+            break;
 
-        case "players_updated":
-          if (data.players) {
-            setPlayerList(data.players);
-          }
-          break;
+          case "players_updated":
+            if (data.players) {
+              setPlayerList(data.players);
+            }
+            break;
 
-        // Opcional: manejar errores que mandás desde el backend
-        case "player_joined_error":
-        case "room_not_found":
-          setErrorMessage(data.message || "Error al unirse a la sala");
-          break;
+          case "player_joined_error":
+          case "room_not_found":
+            setErrorMessage(data.message || "Error al unirse a la sala");
+            break;
+        }
+      });
+
+      socket.onopen = () => {
+        console.log("🟢 Conexión establecida");
+        setIsConnected(true);
+        intervalRef.current = setInterval(() => {
+          sendMessage(socket, "ping", {});
+        }, 30_000);
+      };
+
+      socket.onclose = () => {
+        console.log("🔴 Conexión cerrada");
+        setIsConnected(false);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (shouldReconnectRef.current) {
+          setTimeout(connect, 2000);
+        }
+      };
+
+      socketRef.current = socket;
+    }
+
+    connect();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const s = socketRef.current;
+        if (
+          !s ||
+          s.readyState === WebSocket.CLOSED ||
+          s.readyState === WebSocket.CLOSING
+        ) {
+          connect();
+        }
       }
-    });
-    socket.onopen = () => {
-      console.log("🟢 Conexión establecida");
-      setIsConnected(true);
     };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    socket.onclose = () => {
-      console.log("🔴 Conexión cerrada");
-      setIsConnected(false);
+    return () => {
+      shouldReconnectRef.current = false;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      socketRef.current?.close();
     };
-
-    socketRef.current = socket;
-    return () => socket.close();
   }, []);
 
   const createRoom = (name: string) => {
@@ -109,6 +140,17 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const removePlayer = (playerID: string, roomCode: string) => {
+    if (socketRef.current) {
+      sendMessage(socketRef.current, "player_left", {
+        player_id: playerID,
+        room_code: roomCode,
+      });
+      setRoomCode("");
+      setPlayerList([]);
+    }
+  };
+
   return (
     <SocketContext.Provider
       value={{
@@ -119,6 +161,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         isConnected,
         createRoom,
         joinRoom,
+        removePlayer,
         clearError,
       }}
     >
