@@ -17,3 +17,8 @@ type JoinRoomData struct {
 	PlayerID   string `json:"player_id"`
 	RoomCode   string `json:"room_code"`
 }
+
+type LeaveRoomData struct {
+	PlayerID string `json:"player_id"`
+	RoomCode string `json:"room_code"`
+}

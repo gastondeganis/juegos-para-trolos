@@ -31,3 +31,19 @@ func (r *Room) AddOrUpdatePlayer(id string, name string, conn *websocket.Conn) {
 		Conn: conn,
 	})
 }
+
+func (r *Room) RemovePlayer(id string) {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
+
+	for i := range r.Players {
+		if r.Players[i].ID == id {
+			p := append(r.Players[:i], r.Players[i+1:]...)
+			if r.Players[i].Host {
+				p[0].Host = true
+			}
+			r.Players = p
+			return
+		}
+	}
+}

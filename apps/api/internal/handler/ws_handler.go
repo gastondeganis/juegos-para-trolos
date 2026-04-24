@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gastondeganis/juegos-para-trolos/api/internal/game"
 	internalws "github.com/gastondeganis/juegos-para-trolos/api/internal/websocket"
@@ -27,7 +28,19 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	var currentRoom *game.Room
+	var currentPlayerID string
+
+	defer func() {
+		if currentRoom != nil && currentPlayerID != "" {
+			currentRoom.RemovePlayer(currentPlayerID)
+			BroadcastPlayers(currentRoom)
+		}
+	}()
+
 	for {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
 		var msg internalws.Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
@@ -36,6 +49,9 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		switch msg.Event {
+		case "ping":
+			conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+			conn.WriteJSON(map[string]string{"event": "pong"})
 		case "create_room":
 			var data internalws.CreateRoomData
 			if err := json.Unmarshal(msg.Data, &data); err != nil {
@@ -52,6 +68,8 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				Conn: conn,
 			}
 			room := roomManager.CreateRoom(host)
+			currentRoom = room
+			currentPlayerID = data.HostId
 
 			r := response.ResponseMessage[response.PlayerRoomResponse]{
 				Event: "room_created",
@@ -82,6 +100,8 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			room.AddOrUpdatePlayer(data.PlayerID, data.PlayerName, conn)
+			currentRoom = room
+			currentPlayerID = data.PlayerID
 
 			joinResponse := response.ResponseMessage[response.PlayerRoomResponse]{
 				Event: "room_joined",
@@ -90,6 +110,34 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				},
 			}
 			conn.WriteJSON(joinResponse)
+
+			BroadcastPlayers(room)
+
+		case "player_left":
+			var data internalws.LeaveRoomData
+			if err := json.Unmarshal(msg.Data, &data); err != nil {
+				log.Println("error unmarshalling player_left data", err)
+				response.WriteError(conn, "player_left_error", "Error joining room: bad request")
+				continue
+			}
+
+			room, exists := roomManager.GetRoom(data.RoomCode)
+			if !exists {
+				response.WriteError(conn, "room_not_found", "Error joining room: room not found")
+				continue
+			}
+
+			room.RemovePlayer(data.PlayerID)
+			currentRoom = nil
+			currentPlayerID = ""
+			deletedResponse := response.ResponseMessage[response.PlayerRoomResponse]{
+				Event: "room_left",
+				Data: response.PlayerRoomResponse{
+					RoomCode: room.Code,
+					Players:  room.Players,
+				},
+			}
+			conn.WriteJSON(deletedResponse)
 
 			BroadcastPlayers(room)
 		}
