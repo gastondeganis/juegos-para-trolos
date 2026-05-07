@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gastondeganis/juegos-para-trolos/api/internal/game/impostor"
 	"github.com/gastondeganis/juegos-para-trolos/api/internal/handler"
 )
 
 func main() {
+	impostor.InitWordDB()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
