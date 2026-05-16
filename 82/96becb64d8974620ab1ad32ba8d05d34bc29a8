@@ -1,0 +1,18 @@
+apps/api/internal/game/impostor/types.go
+  h_7c74753d40cb17 3-4,6-7,16-17,22-23,27-32,42,50,52-67
+apps/api/internal/game/impostor/words.go
+  h_7c74753d40cb17 6,54-94
+apps/api/internal/game/impostor/impostor.go
+  h_7c74753d40cb17 5-7,12-14,16,18,22,24-30,34,38-123,127-129,136-137,142-152,155,158-201,203-290,293-316,318-331,333-335,337-350,352-364,367-369
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "8296becb64d8974620ab1ad32ba8d05d34bc29a8",
+  "prompts": {},
+  "humans": {
+    "h_7c74753d40cb17": {
+      "author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  }
+}
