@@ -3,6 +3,7 @@ package impostor
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"sync"
 )
@@ -49,4 +50,45 @@ func LoadAllWords() ([]WordCategory, error) {
 	}
 
 	return allWords, nil
+}
+
+func GetRandomWord() (*Word, error) {
+	if len(GlobalWords) == 0 {
+		return nil, fmt.Errorf("la base de datos de palabras está vacía")
+	}
+
+	// 1. Aplanamos todas las palabras en un pool local
+	var allWords []Word
+	for _, cat := range GlobalWords {
+		allWords = append(allWords, cat.Words...)
+	}
+
+	// 2. Usamos tu lógica de shuffle sobre este pool local seguro
+	return getRandomWord(allWords)
+}
+
+// GetRandomWordFromCategory busca la categoría y te da una palabra aleatoria de ella.
+func GetRandomWordFromCategory(categoryName string) (*Word, error) {
+	cat, found := GetCategory(categoryName)
+	if !found {
+		return nil, fmt.Errorf("la categoría '%s' no existe", categoryName)
+	}
+
+	// 3. CLONACIÓN CRÍTICA: Copiamos el slice para no desordenar la variable GlobalWords en el Shuffle
+	localWords := make([]Word, len(cat.Words))
+	copy(localWords, cat.Words)
+
+	return getRandomWord(localWords)
+}
+
+func getRandomWord(wl []Word) (*Word, error) {
+	if len(wl) == 0 {
+		return nil, fmt.Errorf("no hay palabras disponibles")
+	}
+
+	rand.Shuffle(len(wl), func(i, j int) {
+		(wl)[i], (wl)[j] = (wl)[j], (wl)[i]
+	})
+
+	return &wl[0], nil
 }
