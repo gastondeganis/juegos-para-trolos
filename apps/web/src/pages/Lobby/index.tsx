@@ -4,9 +4,19 @@ import { useSocket } from "../../context/SocketContext";
 import Modal from "../../components/Modal/Modal";
 import "./Lobby.css";
 
+const MIN_PLAYERS = 2;
+
 const Lobby = () => {
   const { roomCode } = useParams();
-  const { playersList, joinRoom, isConnected, removePlayer, notification } = useSocket();
+  const {
+    playersList,
+    joinRoom,
+    isConnected,
+    removePlayer,
+    notification,
+    startGame,
+    gameData,
+  } = useSocket();
   const navigate = useNavigate();
 
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -14,6 +24,17 @@ const Lobby = () => {
   const [nameInput, setNameInput] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const [playerID, setPlayerID] = useState("");
+
+  const currentPlayer = playersList.find((p) => p.id === playerID);
+  const isHost = currentPlayer?.host ?? false;
+  const canStart = isHost && playersList.length >= MIN_PLAYERS;
+
+  // Navigate to game when game starts
+  useEffect(() => {
+    if (gameData && roomCode) {
+      navigate(`/game/${roomCode}`);
+    }
+  }, [gameData, roomCode, navigate]);
 
   useEffect(() => {
     if (!isConnected || !roomCode || isJoining) return;
@@ -89,9 +110,18 @@ const Lobby = () => {
       </ul>
 
       <div className="lobby__actions">
-        <button className="btn btn--primary btn--disabled" disabled>
-          Jugar
-        </button>
+        {isHost ? (
+          <button
+            className={`btn btn--primary${canStart ? "" : " btn--disabled"}`}
+            disabled={!canStart}
+            onClick={startGame}
+            title={!canStart ? `Se necesitan al menos ${MIN_PLAYERS} jugadores` : undefined}
+          >
+            Jugar
+          </button>
+        ) : (
+          <p className="lobby__waiting-host">Esperando que el host inicie el juego…</p>
+        )}
         <button className="btn btn--danger" onClick={() => setShowLeaveModal(true)}>
           Salir de Sala
         </button>
@@ -107,6 +137,7 @@ const Lobby = () => {
               type="text"
               className="input"
               value={nameInput}
+              maxLength={30}
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="Tu nombre..."
             />

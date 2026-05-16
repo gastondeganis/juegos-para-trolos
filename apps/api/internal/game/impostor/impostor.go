@@ -77,7 +77,7 @@ func (i *Impostor) HandleMessage(playerID string, event string, data json.RawMes
 }
 
 func (i *Impostor) wordChoice(data json.RawMessage) error {
-	if !((i.State == GAME_READY) || (i.State == WORD_PICKING)) {
+	if !((i.State == GAME_READY) || (i.State == WORD_PICKING) || (i.State == SHOWING_RESULT_CONTINUE)) {
 		return fmt.Errorf("game state should be GAME_PREPARATION but got %s", i.State)
 	}
 
@@ -129,21 +129,33 @@ func (i *Impostor) GetGameState(playerID string) game.GameData {
 
 	p := i.Players[playerID]
 
+	activePlayerIDs := make([]string, 0, len(i.Players))
+	for id, gp := range i.Players {
+		if gp.Active {
+			activePlayerIDs = append(activePlayerIDs, id)
+		}
+	}
+
+	eliminatedIDs := make([]string, len(i.PlayersToDelete))
+	copy(eliminatedIDs, i.PlayersToDelete)
+
 	return DataResponse{
-		GameState:    i.State,
-		PlayerRole:   p.Role,
-		PlayerAck:    i.PlayersAck[playerID],
-		PlayerVoted:  i.PlayersHasVoted[playerID],
-		PlayersVotes: i.VotesPerPlayer,
-		Word:         p.Word,
+		GameState:           i.State,
+		PlayerRole:          p.Role,
+		PlayerAck:           i.PlayersAck[playerID],
+		PlayerVoted:         i.PlayersHasVoted[playerID],
+		PlayersVotes:        i.VotesPerPlayer,
+		Word:                p.Word,
+		IsFirstPlayer:       i.FirstPlayerID == playerID,
+		EliminatedPlayerIDs: eliminatedIDs,
+		ActivePlayerIDs:     activePlayerIDs,
 	}
 }
 
-func (i *Impostor) Start(players []game.Player, cfg GameConfig) error {
+func (i *Impostor) Start(players []game.Player) error {
 	i.Lock()
 	defer i.Unlock()
 
-	i.Config = cfg
 	if i.Config.ImpostorCount == 0 {
 		i.Config.ImpostorCount = 1
 	}

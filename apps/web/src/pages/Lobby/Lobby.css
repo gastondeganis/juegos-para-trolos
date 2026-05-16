@@ -167,3 +167,11 @@
   flex-direction: column;
   gap: 12px;
 }
+
+/* ── Waiting host message ──────────────────────────────────── */
+.lobby__waiting-host {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  padding: 10px 0;
+}

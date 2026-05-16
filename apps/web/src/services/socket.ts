@@ -1,38 +1,26 @@
-import type { Player } from "../context/SocketContext";
+import type { Player, GameData } from "../types";
 
-// Lo que tu App de React espera consumir
-type SocketMessage = {
+export type SocketMessage = {
   event: string;
   roomCode?: string;
   message?: string;
-  players?: Array<Player>;
+  players?: Player[];
+  gameData?: GameData;
 };
 
-// La estructura real que viene por el cable según el nuevo contrato
 interface RawResponse {
   event: string;
-  data: {
-    room_code?: string;
-    message?: string;
-    players?: Array<Player>;
-  };
+  data: Record<string, unknown>;
 }
 
-// Ahora sendMessage recibe el nombre del evento y los datos por separado
-// para armar el sobre antes de mandarlo
-export const sendMessage = (socket: WebSocket, event: string, data: any) => {
+export const sendMessage = (socket: WebSocket, event: string, data: Record<string, unknown>) => {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({ event, data }));
   } else if (socket.readyState === WebSocket.CONNECTING) {
-    // Si está conectando, esperamos un poquito y reintentamos
-    console.warn(
-      `⏳ Socket conectando... reintentando envío de ${event} en 500ms`
-    );
+    console.warn(`⏳ Socket conectando... reintentando envío de ${event} en 500ms`);
     setTimeout(() => sendMessage(socket, event, data), 500);
   } else {
-    console.error(
-      `🔴 No se pudo enviar ${event}: socket cerrado (estado: ${socket.readyState})`
-    );
+    console.error(`🔴 No se pudo enviar ${event}: socket cerrado (estado: ${socket.readyState})`);
   }
 };
 
@@ -44,18 +32,21 @@ export function connectSocket(onMessage: (data: SocketMessage) => void) {
   };
 
   socket.onmessage = (event) => {
-    const response: RawResponse = JSON.parse(event.data);
+    const response: RawResponse = JSON.parse(event.data as string);
 
-    // Mapeamos la estructura anidada a la estructura plana que usa el Context
-    const normalizedData: SocketMessage = {
+    const normalized: SocketMessage = {
       event: response.event,
-      ...response.data,
-      // Si viene room_code, lo asignamos a roomCode (camelCase para el front)
-      roomCode: response.data?.room_code,
+      roomCode: response.data?.room_code as string | undefined,
+      message: response.data?.message as string | undefined,
+      players: response.data?.players as Player[] | undefined,
     };
 
-    console.log("📨 mensaje normalizado:", normalizedData);
-    onMessage(normalizedData);
+    if (response.event === "game_state_updated") {
+      normalized.gameData = response.data as unknown as GameData;
+    }
+
+    console.log("📨 mensaje:", normalized);
+    onMessage(normalized);
   };
 
   socket.onclose = () => {

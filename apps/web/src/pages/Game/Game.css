@@ -1,0 +1,307 @@
+/* ── Page shell ────────────────────────────────────────────── */
+.game-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  gap: 24px;
+  padding-bottom: 32px;
+}
+
+.game-page--loading {
+  justify-content: center;
+  gap: 16px;
+  min-height: 60vh;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.game-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.game-room-code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 4px 14px;
+}
+
+/* ── View container ────────────────────────────────────────── */
+.game-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.game-view--center {
+  align-items: center;
+  text-align: center;
+}
+
+/* ── Utility text ──────────────────────────────────────────── */
+.game-muted {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* ── Role badge ────────────────────────────────────────────── */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 20px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  align-self: center;
+}
+
+.role-badge--civil {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.role-badge--impostor {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ── Word card ─────────────────────────────────────────────── */
+.word-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.word-card--sm {
+  padding: 16px 20px;
+}
+
+.word-card__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.word-card__word {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.02em;
+}
+
+.word-card__word--sm {
+  font-size: 1.25rem;
+}
+
+/* ── Section ───────────────────────────────────────────────── */
+.game-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.game-section h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ── Player list ───────────────────────────────────────────── */
+.game-player-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.game-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.game-player--self {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(99,102,241,0.08) 100%);
+  color: var(--text-heading);
+}
+
+.game-player__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.game-player__name {
+  flex: 1;
+}
+
+/* ── Vote list ─────────────────────────────────────────────── */
+.game-player-list--vote .game-player {
+  justify-content: space-between;
+}
+
+.game-player--vote {
+  cursor: default;
+}
+
+.vote-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-radius: 99px;
+  padding: 2px 10px;
+}
+
+/* ── Small button ──────────────────────────────────────────── */
+.btn--sm {
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Pills ─────────────────────────────────────────────────── */
+.pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid rgba(99,102,241,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pill--host {
+  background: rgba(234, 179, 8, 0.12);
+  color: #eab308;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* ── Action row ────────────────────────────────────────────── */
+.game-view__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ── Form ──────────────────────────────────────────────────── */
+.game-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.game-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── Results ───────────────────────────────────────────────── */
+.result-icon {
+  font-size: 4rem;
+}
+
+.game-eliminated {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+/* ── End screen ────────────────────────────────────────────── */
+.end-icon {
+  font-size: 5rem;
+  animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes pop-in {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.end-title--win {
+  color: #22c55e;
+}
+
+.end-title--lose {
+  color: var(--danger);
+}
+
+/* ── Toast ─────────────────────────────────────────────────── */
+.game-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  z-index: 200;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: toast-in 0.25s ease, toast-out 0.4s ease 3.1s forwards;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

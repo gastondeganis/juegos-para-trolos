@@ -34,12 +34,15 @@ const (
 )
 
 type DataResponse struct {
-	GameState    game.GameState
-	PlayerRole   Role             `json:"player_role"`
-	PlayerAck    bool             `json:"player_ack"`
-	PlayerVoted  bool             `json:"player_voted"`
-	Word         []string         `json:"word"`
-	PlayersVotes map[string]uint8 `json:"players_votes"`
+	GameState           game.GameState   `json:"game_state"`
+	PlayerRole          Role             `json:"player_role"`
+	PlayerAck           bool             `json:"player_ack"`
+	PlayerVoted         bool             `json:"player_voted"`
+	Word                []string         `json:"word"`
+	PlayersVotes        map[string]uint8 `json:"players_votes"`
+	IsFirstPlayer       bool             `json:"is_first_player"`
+	EliminatedPlayerIDs []string         `json:"eliminated_player_ids"`
+	ActivePlayerIDs     []string         `json:"active_player_ids"`
 }
 
 type GamePlayer struct {
