@@ -1,0 +1,50 @@
+apps/web/src/types/index.ts
+  s_223c15f9709c64::t_45bcee8b6d89d4 6-31
+docs/rfc-frontend-game.md
+  s_2485cc7f0afe05::t_dc01871e507d39 1-744
+apps/web/src/App.tsx
+  s_223c15f9709c64::t_156b5484b12482 5,14
+apps/web/src/pages/Lobby/index.tsx
+  s_223c15f9709c64::t_54e71af4cf346a 7-8,11-19,28-38,113-124,140
+apps/web/src/context/SocketContext.tsx
+  s_223c15f9709c64::t_189a7d3267e303 10,12,21,25-26,37,44,53,58-62,90,101,117-124,128-139,143-158,170,174-175,186
+apps/web/src/services/socket.ts
+  s_223c15f9709c64::t_81375984710918 1,3,7-8,13,16,20,23,35,37,39-41,44-49
+apps/web/src/pages/Game/index.tsx
+  s_223c15f9709c64::t_97e43916e45b30 229-230
+  s_223c15f9709c64::t_adcfbfb8fa25b5 1-228,231-528
+apps/web/src/pages/Game/Game.css
+  s_223c15f9709c64::t_658b1ac934ac96 1-307
+apps/web/src/pages/Lobby/Lobby.css
+  s_223c15f9709c64::t_51bb553167d870 170-177
+apps/api/internal/game/impostor/impostor.go
+  s_223c15f9709c64::t_11fd6cd44c1c91 132-141,143-151
+  s_223c15f9709c64::t_880c08d0f73827 155
+  s_223c15f9709c64::t_359291cb4a8f47 80
+apps/api/internal/game/impostor/types.go
+  s_223c15f9709c64::t_bb02cdb04c90fe 37-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "f378ecf33fb6deef22cf3e87c70fe553677a3b6c",
+  "prompts": {},
+  "sessions": {
+    "s_223c15f9709c64": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1d0f5255-6fbf-41b5-bb77-1e5e5419e7e8",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "gastondeganis <gastondeganis@gmail.com>"
+    },
+    "s_2485cc7f0afe05": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f800639e-3460-46b5-a23a-a76d88ea576e",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  }
+}
