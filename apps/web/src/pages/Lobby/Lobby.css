@@ -132,6 +132,35 @@
   width: 100%;
 }
 
+/* ── Join toast ────────────────────────────────────────────── */
+.lobby__toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  z-index: 200;
+  white-space: nowrap;
+  animation: toast-in 0.25s ease, toast-out 0.4s ease 3.1s forwards;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 /* ── Modal form (join name) ────────────────────────────────── */
 .modal__form {
   display: flex;

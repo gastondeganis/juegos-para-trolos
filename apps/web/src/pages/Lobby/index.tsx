@@ -6,7 +6,7 @@ import "./Lobby.css";
 
 const Lobby = () => {
   const { roomCode } = useParams();
-  const { playersList, joinRoom, isConnected, removePlayer } = useSocket();
+  const { playersList, joinRoom, isConnected, removePlayer, notification } = useSocket();
   const navigate = useNavigate();
 
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -46,6 +46,12 @@ const Lobby = () => {
 
   return (
     <div className="lobby">
+      {notification && (
+        <div className="lobby__toast" key={notification}>
+          {notification}
+        </div>
+      )}
+
       <h1>El Impostor</h1>
 
       <div className="lobby__room-card">

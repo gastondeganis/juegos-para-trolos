@@ -16,6 +16,7 @@ interface SocketContextType {
   roomCode: string;
   playersList: Player[];
   errorMessage: string;
+  notification: string;
   isConnected: boolean;
   createRoom: (name: string) => void;
   joinRoom: (name: string, code: string) => void;
@@ -29,10 +30,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [roomCode, setRoomCode] = useState("");
   const [playersList, setPlayerList] = useState<Player[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [notification, setNotification] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shouldReconnectRef = useRef(true);
+  const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearError = () => {
     setErrorMessage("");
@@ -55,6 +58,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
             if (data.players) {
               setPlayerList(data.players);
             }
+            break;
+
+          case "notification":
+            if (notificationTimerRef.current) clearTimeout(notificationTimerRef.current);
+            setNotification(data.message || "");
+            notificationTimerRef.current = setTimeout(() => setNotification(""), 3500);
             break;
 
           case "player_joined_error":
@@ -158,6 +167,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         roomCode,
         playersList,
         errorMessage,
+        notification,
         isConnected,
         createRoom,
         joinRoom,
