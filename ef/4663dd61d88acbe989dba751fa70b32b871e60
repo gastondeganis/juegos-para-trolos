@@ -1,0 +1,14 @@
+apps/api/internal/data/words.json
+  h_7c74753d40cb17 1-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "ef4663dd61d88acbe989dba751fa70b32b871e60",
+  "prompts": {},
+  "humans": {
+    "h_7c74753d40cb17": {
+      "author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  }
+}
