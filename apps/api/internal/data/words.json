@@ -1,0 +1,138 @@
+{
+  "categories": [
+    {
+      "category_name": "Comida",
+      "words": [
+        {
+          "word": "Milanesa",
+          "impostor_words": ["Suprema", "Napolitana", "Bife"]
+        },
+        {
+          "word": "Pizza",
+          "impostor_words": ["Fugazzeta", "Empanada", "Calzone"]
+        },
+        {
+          "word": "Empanada",
+          "impostor_words": ["Tarta", "Calzone", "Samosa"]
+        },
+        {
+          "word": "Asado",
+          "impostor_words": ["Parrilla", "Costillar", "Choripán"]
+        },
+        {
+          "word": "Hamburguesa",
+          "impostor_words": ["Paty", "Sándwich", "Cheeseburger"]
+        }
+      ]
+    },
+    {
+      "category_name": "Artistas Pop",
+      "words": [
+        {
+          "word": "Taylor Swift",
+          "impostor_words": ["Olivia Rodrigo", "Sabrina Carpenter", "Dua Lipa"]
+        },
+        {
+          "word": "Dua Lipa",
+          "impostor_words": ["Ava Max", "Taylor Swift", "Doja Cat"]
+        },
+        {
+          "word": "Billie Eilish",
+          "impostor_words": ["Lorde", "Lana Del Rey", "Olivia Rodrigo"]
+        },
+        {
+          "word": "Bad Bunny",
+          "impostor_words": ["Feid", "J Balvin", "Rauw Alejandro"]
+        },
+        {
+          "word": "Lady Gaga",
+          "impostor_words": ["Katy Perry", "Madonna", "Sia"]
+        }
+      ]
+    },
+    {
+      "category_name": "Películas",
+      "words": [
+        {
+          "word": "Titanic",
+          "impostor_words": ["Avatar", "Pearl Harbor", "Poseidón"]
+        },
+        {
+          "word": "Shrek",
+          "impostor_words": ["Madagascar", "Kung Fu Panda", "Monsters Inc"]
+        },
+        {
+          "word": "Toy Story",
+          "impostor_words": ["Cars", "Frozen", "Wall-E"]
+        },
+        {
+          "word": "Harry Potter",
+          "impostor_words": ["Percy Jackson", "Narnia", "Fantastic Beasts"]
+        }
+      ]
+    },
+    {
+      "category_name": "Videojuegos",
+      "words": [
+        {
+          "word": "Minecraft",
+          "impostor_words": ["Roblox", "Terraria", "Lego Worlds"]
+        },
+        {
+          "word": "Fortnite",
+          "impostor_words": ["PUBG", "Warzone", "Apex Legends"]
+        },
+        {
+          "word": "GTA V",
+          "impostor_words": ["Saints Row", "Mafia", "Watch Dogs"]
+        },
+        {
+          "word": "League of Legends",
+          "impostor_words": ["Dota 2", "Smite", "Valorant"]
+        }
+      ]
+    },
+    {
+      "category_name": "Ciudades",
+      "words": [
+        {
+          "word": "Buenos Aires",
+          "impostor_words": ["Montevideo", "Madrid", "Santiago"]
+        },
+        {
+          "word": "Nueva York",
+          "impostor_words": ["Chicago", "Toronto", "Boston"]
+        },
+        {
+          "word": "Tokio",
+          "impostor_words": ["Seúl", "Osaka", "Shanghái"]
+        },
+        {
+          "word": "París",
+          "impostor_words": ["Roma", "Londres", "Viena"]
+        }
+      ]
+    },
+    {
+      "category_name": "Tecnología",
+      "words": [
+        {
+          "word": "iPhone",
+          "impostor_words": ["Samsung Galaxy", "Pixel", "Xiaomi"]
+        },
+        {
+          "word": "MacBook",
+          "impostor_words": ["ThinkPad", "Dell XPS", "Surface Laptop"]
+        },
+        {
+          "word": "ChatGPT",
+          "impostor_words": ["Gemini", "Claude", "Copilot"]
+        },
+        {
+          "word": "PlayStation",
+          "impostor_words": ["Xbox", "Nintendo Switch", "Steam Deck"]
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gastondeganis/juegos-para-trolos/api/internal/game"
+	"github.com/gastondeganis/juegos-para-trolos/api/internal/game/impostor"
 	internalws "github.com/gastondeganis/juegos-para-trolos/api/internal/websocket"
 	"github.com/gastondeganis/juegos-para-trolos/api/internal/websocket/response"
 	"github.com/gorilla/websocket"
@@ -31,17 +32,13 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	var currentRoom *game.Room
 	var currentPlayerID string
 
+	// Cleanup al cerrar el socket
 	defer func() {
 		if currentRoom != nil && currentPlayerID != "" {
-			rem := currentRoom.RemovePlayer(currentPlayerID)
-			if rem {
-				ok := roomManager.DeleteRoom(currentRoom.Code)
-				if !ok {
-					log.Printf("delete room %s failed", currentRoom.Code)
-					return
-				}
-
-				log.Printf("deleted room %s", currentRoom.Code)
+			isEmpty := currentRoom.RemovePlayer(currentPlayerID)
+			if isEmpty {
+				roomManager.DeleteRoom(currentRoom.Code)
+				log.Printf("Sala %s eliminada (vacía por desconexión)", currentRoom.Code)
 			} else {
 				BroadcastPlayers(currentRoom)
 			}
@@ -54,7 +51,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		var msg internalws.Message
 		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Println(err)
+			log.Println("Error reading JSON:", err)
 			return
 		}
 
@@ -62,6 +59,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		case "ping":
 			conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 			conn.WriteJSON(map[string]string{"event": "pong"})
+
 		case "create_room":
 			var data internalws.CreateRoomData
 			if err := json.Unmarshal(msg.Data, &data); err != nil {
@@ -81,7 +79,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 			currentRoom = room
 			currentPlayerID = data.HostId
 
-			r := response.ResponseMessage[response.PlayerRoomResponse]{
+			r := response.MessageResponse[response.PlayerRoomResponse]{
 				Event: "room_created",
 				Data: response.PlayerRoomResponse{
 					RoomCode: room.Code,
@@ -113,7 +111,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 			currentRoom = room
 			currentPlayerID = data.PlayerID
 
-			joinResponse := response.ResponseMessage[response.PlayerRoomResponse]{
+			joinResponse := response.MessageResponse[response.PlayerRoomResponse]{
 				Event: "room_joined",
 				Data: response.PlayerRoomResponse{
 					RoomCode: room.Code,
@@ -123,41 +121,46 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 
 			BroadcastPlayers(room)
 
+		case "start_game":
+			if currentRoom == nil {
+				continue
+			}
+
+			currentRoom.Game = &impostor.Impostor{}
+
+			err := currentRoom.Game.Start(currentRoom.Players)
+			if err != nil {
+				log.Println("Error starting game:", err)
+				continue
+			}
+
+			// 3. Avisamos a todos del nuevo estado
+			BroadcastGameState(currentRoom)
+
 		case "player_left":
-			var data internalws.LeaveRoomData
-			if err := json.Unmarshal(msg.Data, &data); err != nil {
-				log.Println("error unmarshalling player_left data", err)
-				response.WriteError(conn, "player_left_error", "Error joining room: bad request")
+			if currentRoom == nil {
 				continue
 			}
 
-			room, exists := roomManager.GetRoom(data.RoomCode)
-			if !exists {
-				response.WriteError(conn, "room_not_found", "Error joining room: room not found")
-				continue
-			}
-
-			isEmpty := room.RemovePlayer(data.PlayerID)
+			isEmpty := currentRoom.RemovePlayer(currentPlayerID)
+			roomCode := currentRoom.Code
 			currentRoom = nil
 			currentPlayerID = ""
 
 			if isEmpty {
-				roomManager.DeleteRoom(room.Code)
-				log.Printf("sala %s eliminada (vacía)", room.Code)
-				conn.WriteJSON(response.ResponseMessage[response.PlayerRoomResponse]{
-					Event: "room_deleted",
-					Data: response.PlayerRoomResponse{
-						RoomCode: room.Code,
-					}})
+				roomManager.DeleteRoom(roomCode)
 			} else {
-				conn.WriteJSON(response.ResponseMessage[response.PlayerRoomResponse]{
-					Event: "room_left",
-					Data: response.PlayerRoomResponse{
-						RoomCode: room.Code,
-						Players:  room.Players,
-					}})
+				BroadcastPlayers(currentRoom)
+			}
 
-				BroadcastPlayers(room)
+		default:
+			if currentRoom != nil && currentRoom.Game != nil {
+				err := currentRoom.Game.HandleMessage(currentPlayerID, msg.Event, msg.Data)
+				if err != nil {
+					log.Println("Error en la lógica del juego:", err)
+					continue
+				}
+				BroadcastGameState(currentRoom)
 			}
 		}
 	}

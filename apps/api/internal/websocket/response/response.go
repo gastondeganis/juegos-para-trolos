@@ -5,7 +5,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type ResponseMessage[T any] struct {
+type GameDataResponse MessageResponse[game.GameData]
+type MessageResponse[T any] struct {
 	Event string `json:"event"`
 	Data  T      `json:"data"`
 }
@@ -20,7 +21,7 @@ type ErrorResponse struct {
 }
 
 func WriteError(conn *websocket.Conn, event, message string) {
-	errResponse := ResponseMessage[ErrorResponse]{
+	errResponse := MessageResponse[ErrorResponse]{
 		Event: event,
 		Data: ErrorResponse{
 			Message: message,

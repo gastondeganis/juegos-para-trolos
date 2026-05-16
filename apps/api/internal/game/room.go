@@ -15,10 +15,12 @@ const (
 )
 
 type Room struct {
-	Code    string     `json:"code"`
-	Players []Player   `json:"players"`
-	Status  RoomStatus `json:"status"`
-	Mu      sync.RWMutex
+	Code      string     `json:"code"`
+	Players   []Player   `json:"players"`
+	Status    RoomStatus `json:"status"`
+	GameState GameState  `json:"game_state"`
+	Game      Game
+	Mu        sync.RWMutex
 }
 
 func (r *Room) AddOrUpdatePlayer(id string, name string, conn *websocket.Conn) {
