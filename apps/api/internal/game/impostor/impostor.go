@@ -10,7 +10,8 @@ import (
 )
 
 type GameConfig struct {
-	ImpostorCount uint8 `json:"impostor_count"`
+	ImpostorCount     uint8 `json:"impostor_count"`
+	ShowImpostorWords bool  `json:"show_impostor_words"`
 }
 type Impostor struct {
 	sync.RWMutex
@@ -45,6 +46,9 @@ func (i *Impostor) HandleMessage(playerID string, event string, data json.RawMes
 			return err
 		}
 	case "word_accepted":
+		if i.State != WORD_PICKING {
+			return fmt.Errorf("game state should be WORD_PICKING but got %s", i.State)
+		}
 		i.AckedCount = 0
 		for id := range i.PlayersAck {
 			i.PlayersAck[id] = false
@@ -63,9 +67,12 @@ func (i *Impostor) HandleMessage(playerID string, event string, data json.RawMes
 		if err := i.playerVoted(playerID, data); err != nil {
 			return err
 		}
-
 	case "election_closed":
 		if err := i.electionClosed(playerID); err != nil {
+			return err
+		}
+	case "continue_game":
+		if err := i.continueGame(playerID, data); err != nil {
 			return err
 		}
 	case "restart_game":
@@ -77,7 +84,7 @@ func (i *Impostor) HandleMessage(playerID string, event string, data json.RawMes
 }
 
 func (i *Impostor) wordChoice(data json.RawMessage) error {
-	if !((i.State == GAME_READY) || (i.State == WORD_PICKING) || (i.State == SHOWING_RESULT_CONTINUE)) {
+	if !((i.State == GAME_READY) || (i.State == WORD_PICKING)) {
 		return fmt.Errorf("game state should be GAME_PREPARATION but got %s", i.State)
 	}
 
@@ -111,12 +118,13 @@ func (i *Impostor) wordChoice(data json.RawMessage) error {
 	i.UsedWords = append(i.UsedWords, w)
 	i.CurrentWord = w
 
-	// TODO: ver tema de config para que se pueda switchear entre ??? y palabras
 	for id, p := range i.Players {
 		if p.Role == CIVIL {
 			p.Word = []string{w.RealWord}
 		} else {
-			p.Word = w.ImpostorWords
+			if i.Config.ShowImpostorWords {
+				p.Word = w.ImpostorWords
+			}
 		}
 		i.Players[id] = p
 	}
@@ -177,14 +185,9 @@ func (i *Impostor) playerAcked(playerID string, data json.RawMessage) error {
 	if err := json.Unmarshal(data, &d); err != nil {
 		return err
 	}
-	if !i.PlayersAck[playerID] {
-		if d.Acked {
-			i.PlayersAck[playerID] = true
-			i.AckedCount++
-		} else {
-			i.PlayersAck[playerID] = false
-			i.AckedCount--
-		}
+	if !i.PlayersAck[playerID] && d.Acked {
+		i.PlayersAck[playerID] = true
+		i.AckedCount++
 	}
 	if i.AckedCount == uint8(len(i.Players)) {
 		i.State = IN_PROGRESS
@@ -208,6 +211,11 @@ func (i *Impostor) playerVoted(pID string, data json.RawMessage) error {
 		return fmt.Errorf("game state should be VOTING but got %s", i.State)
 	}
 
+	voter, exists := i.Players[pID]
+	if !exists || !voter.Active {
+		return fmt.Errorf("los jugadores eliminados no pueden votar")
+	}
+
 	var d PlayerVotedData
 	if err := json.Unmarshal(data, &d); err != nil {
 		return err
@@ -218,29 +226,32 @@ func (i *Impostor) playerVoted(pID string, data json.RawMessage) error {
 	}
 
 	targetPlayer, exists := i.Players[d.VotedPlayerID]
-	if !exists {
-		return fmt.Errorf("el jugador votado no existe")
+	if !exists || !targetPlayer.Active {
+		return fmt.Errorf("el jugador votado no existe o ya fue eliminado")
 	}
 
 	previousVote, hasVotedBefore := i.PlayerVote[pID]
 
-	if hasVotedBefore && previousVote.ID == d.VotedPlayerID {
-		return nil
+	// Acceso correcto usando el campo promocionado Player del struct game
+	if hasVotedBefore && previousVote.Player.ID == d.VotedPlayerID {
+		return nil // Idempotencia: ya lo había votado
 	}
 
 	if hasVotedBefore {
-		i.VotesPerPlayer[previousVote.ID]--
+		i.VotesPerPlayer[previousVote.Player.ID]--
 	}
 
 	i.VotesPerPlayer[d.VotedPlayerID]++
 	i.PlayersHasVoted[pID] = true
-	i.PlayerVote[pID] = &targetPlayer
+
+	realTarget := i.Players[d.VotedPlayerID]
+	i.PlayerVote[pID] = &realTarget
 
 	return nil
 }
 
 func (i *Impostor) electionClosed(pID string) error {
-	if !(i.State == VOTING || i.State == CALCULATING_RESULTS) {
+	if i.State != VOTING {
 		return fmt.Errorf("game state should be VOTING but got %s", i.State)
 	}
 	if i.FirstPlayerID != pID {
@@ -251,10 +262,6 @@ func (i *Impostor) electionClosed(pID string) error {
 
 	var leaders []string
 	var maxVotes uint8 = 0
-
-	if len(i.VotesPerPlayer) == 0 {
-		return fmt.Errorf("no voto nadie")
-	}
 
 	for playerID, votes := range i.VotesPerPlayer {
 		if votes > maxVotes {
@@ -267,6 +274,10 @@ func (i *Impostor) electionClosed(pID string) error {
 		if votes == maxVotes && votes > 0 {
 			leaders = append(leaders, playerID)
 		}
+	}
+
+	if maxVotes == 0 {
+		return fmt.Errorf("nadie emitió un voto")
 	}
 
 	i.PlayersToDelete = leaders
@@ -292,10 +303,20 @@ func (i *Impostor) electionClosed(pID string) error {
 		} else if i.activeCivil <= i.impostorsLeft {
 			i.State = FINISH_IMPOSTOR_VICTORY
 		} else {
+			if i.FirstPlayerID == p.Player.ID {
+				for nextID, nextPlayer := range i.Players {
+					if nextPlayer.Active {
+						i.FirstPlayerID = nextID
+						break
+					}
+				}
+			}
+			// Juego sigue
 			i.State = SHOWING_RESULT_CONTINUE
 		}
 
 	} else {
+		// Juego sigue
 		i.State = SHOWING_RESULT_DRAW
 	}
 
@@ -303,7 +324,8 @@ func (i *Impostor) electionClosed(pID string) error {
 }
 
 func (i *Impostor) restartGame() error {
-	if !(i.State == FINISH_CIVIL_VICTORY || i.State == FINISH_IMPOSTOR_VICTORY || i.State == SHOWING_RESULT_DRAW) {
+	if !(i.State == FINISH_CIVIL_VICTORY || i.State == FINISH_IMPOSTOR_VICTORY ||
+		i.State == SHOWING_RESULT_DRAW || i.State == SHOWING_RESULT_CONTINUE) {
 		return fmt.Errorf("no se puede reiniciar el juego si no ha terminado")
 	}
 
@@ -358,7 +380,7 @@ func (i *Impostor) setupMatch(players []game.Player) error {
 		}
 
 		determinedRole := CIVIL
-		if uint8(idx) < i.Config.ImpostorCount {
+		if uint8(idx) >= uint8(totalPlayers)-i.Config.ImpostorCount {
 			determinedRole = IMPOSTOR
 		}
 
@@ -373,11 +395,45 @@ func (i *Impostor) setupMatch(players []game.Player) error {
 		i.PlayersAck[id] = false
 		i.PlayersHasVoted[id] = false
 		i.VotesPerPlayer[id] = 0
-		i.PlayerVote[id] = nil
 	}
 
 	i.impostorsLeft = i.Config.ImpostorCount
 	i.activeCivil = uint8(totalPlayers) - i.impostorsLeft
 
+	return nil
+}
+
+func (i *Impostor) continueGame(pID string, data json.RawMessage) error {
+	if !(i.State == SHOWING_RESULT_CONTINUE || i.State == SHOWING_RESULT_DRAW) {
+		return fmt.Errorf("no se puede continuar la partida desde el estado %s", i.State)
+	}
+
+	if pID != i.FirstPlayerID {
+		return fmt.Errorf("player %s is not the first player. Only first players can continue game", pID)
+	}
+
+	var c DataContinue
+	if err := json.Unmarshal(data, &c); err != nil {
+		return err
+	}
+
+	if c.Continue {
+		i.PlayersToDelete = nil
+
+		for id := range i.Players {
+			i.PlayersHasVoted[id] = false
+			i.VotesPerPlayer[id] = 0
+			delete(i.PlayerVote, id)
+		}
+
+		i.State = IN_PROGRESS
+		return nil
+	}
+
+	if c.Restart {
+		return i.restartGame()
+	}
+
+	i.State = GAME_FINISHED
 	return nil
 }

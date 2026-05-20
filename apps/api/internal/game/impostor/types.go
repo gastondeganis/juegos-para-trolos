@@ -24,13 +24,12 @@ const (
 	AWAITING_ACK            game.GameState = "awaiting_ack"
 	IN_PROGRESS             game.GameState = "in_progress"
 	VOTING                  game.GameState = "voting"
-	CALCULATING_RESULTS     game.GameState = "showing_results"
+	CALCULATING_RESULTS     game.GameState = "calculating_results"
 	SHOWING_RESULT_CONTINUE game.GameState = "showing_results_delete"
-	SHOWING_RESULT_DRAW     game.GameState = "showing_results"
+	SHOWING_RESULT_DRAW     game.GameState = "showing_results_draw"
 	FINISH_CIVIL_VICTORY    game.GameState = "finish_civil_victory"
 	FINISH_IMPOSTOR_VICTORY game.GameState = "finish_impostor_victory"
-
-	GAME_FINISHED game.GameState = "game_finished"
+	GAME_FINISHED           game.GameState = "game_finished"
 )
 
 type DataResponse struct {
@@ -68,4 +67,9 @@ type PlayerAckedData struct {
 type PlayerVotedData struct {
 	Voted         bool   `json:"voted"`
 	VotedPlayerID string `json:"voted_player_id"`
+}
+
+type DataContinue struct {
+	Continue bool `json:"continue"`
+	Restart  bool `json:"restart"`
 }
