@@ -1,0 +1,33 @@
+apps/api/internal/game/impostor/types.go
+  s_db8a8abc1482f7::t_cc57f7b6511606 27,29
+  h_7c74753d40cb17 71-75
+apps/api/internal/game/impostor/impostor.go
+  s_db8a8abc1482f7::t_092d5390195501 426
+  s_db8a8abc1482f7::t_8ea0038fdcf9dc 188-190
+  s_db8a8abc1482f7::t_c3ec34a501e73e 254
+  s_db8a8abc1482f7::t_d276d1ae8430bc 279-280
+  s_db8a8abc1482f7::t_dc9d9e8b8029d5 327-328
+  h_7c74753d40cb17 14,74-77,125,127,214-218,229-230,235-237,241,246-248,306-314,319,383,405-425,427-438
+  s_db8a8abc1482f7::t_f9526dc1880c47 49-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "74d6572c46437bd9dacd3e11bd9e3f3b29c676c0",
+  "prompts": {},
+  "humans": {
+    "h_7c74753d40cb17": {
+      "author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_db8a8abc1482f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c5d4bb12-7279-41cb-ab21-af8816fb5ecf",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  }
+}
