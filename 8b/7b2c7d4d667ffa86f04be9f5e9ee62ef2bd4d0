@@ -1,0 +1,21 @@
+docs/impostor_estado_transiciones.md
+  s_db8a8abc1482f7::t_3c3d134e6ad90f 104
+  s_db8a8abc1482f7::t_efd23c37fe19fb 1-98,100-103,105-110
+  s_db8a8abc1482f7::t_d9c80d09c2c2da 99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "8b7b2c7d4d667ffa86f04be9f5e9ee62ef2bd4d0",
+  "prompts": {},
+  "sessions": {
+    "s_db8a8abc1482f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c5d4bb12-7279-41cb-ab21-af8816fb5ecf",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  }
+}
