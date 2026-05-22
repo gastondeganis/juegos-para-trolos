@@ -121,6 +121,18 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 
 			BroadcastPlayers(room)
 
+			// If a game is already in progress, send current state to the (re)joining player
+			if room.Game != nil {
+				gameState := room.Game.GetGameState(data.PlayerID)
+				gameStateMsg := response.MessageResponse[game.GameData]{
+					Event: "game_state_updated",
+					Data:  gameState,
+				}
+				if err := conn.WriteJSON(gameStateMsg); err != nil {
+					log.Println("error sending game state on rejoin:", err)
+				}
+			}
+
 		case "start_game":
 			if currentRoom == nil {
 				continue

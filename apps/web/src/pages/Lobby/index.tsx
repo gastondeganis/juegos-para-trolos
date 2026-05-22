@@ -16,6 +16,8 @@ const Lobby = () => {
     notification,
     startGame,
     gameData,
+    gameConfig,
+    setGameConfig,
   } = useSocket();
   const navigate = useNavigate();
 
@@ -108,6 +110,63 @@ const Lobby = () => {
           );
         })}
       </ul>
+
+      {isHost && (
+        <div className="lobby__config">
+          <p className="lobby__config-title">Configuración</p>
+
+          <div className="lobby__config-item">
+            <span className="lobby__config-label">Impostores</span>
+            <div className="stepper">
+              <button
+                className="stepper__btn"
+                onClick={() =>
+                  setGameConfig({
+                    ...gameConfig,
+                    impostorCount: Math.max(1, gameConfig.impostorCount - 1),
+                  })
+                }
+                disabled={gameConfig.impostorCount <= 1}
+              >
+                −
+              </button>
+              <span className="stepper__val">{gameConfig.impostorCount}</span>
+              <button
+                className="stepper__btn"
+                onClick={() =>
+                  setGameConfig({
+                    ...gameConfig,
+                    impostorCount: Math.min(
+                      Math.max(1, playersList.length - 1),
+                      gameConfig.impostorCount + 1
+                    ),
+                  })
+                }
+                disabled={gameConfig.impostorCount >= Math.max(1, playersList.length - 1)}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="lobby__config-item">
+            <span className="lobby__config-label">Mostrar pistas al impostor</span>
+            <button
+              className={`toggle${gameConfig.showImpostorWords ? " toggle--on" : ""}`}
+              onClick={() =>
+                setGameConfig({
+                  ...gameConfig,
+                  showImpostorWords: !gameConfig.showImpostorWords,
+                })
+              }
+              role="switch"
+              aria-checked={gameConfig.showImpostorWords}
+            >
+              <span className="toggle__thumb" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="lobby__actions">
         {isHost ? (

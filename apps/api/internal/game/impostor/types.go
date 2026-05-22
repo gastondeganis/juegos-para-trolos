@@ -40,6 +40,7 @@ type DataResponse struct {
 	Word                []string            `json:"word"`
 	PlayersVotes        map[string]uint8    `json:"players_votes"`
 	IsFirstPlayer       bool                `json:"is_first_player"`
+	FirstPlayerID       string              `json:"first_player_id"`
 	EliminatedPlayerIDs []string            `json:"eliminated_player_ids"`
 	ActivePlayerIDs     []string            `json:"active_player_ids"`
 	AllPlayersAck       map[string]bool     `json:"all_players_ack"`

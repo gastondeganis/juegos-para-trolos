@@ -175,3 +175,111 @@
   font-size: 0.875rem;
   padding: 10px 0;
 }
+
+/* ── Game config (host only) ───────────────────────────────── */
+.lobby__config {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lobby__config-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lobby__config-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lobby__config-label {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* ── Stepper ───────────────────────────────────────────────── */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.stepper__btn:hover:not(:disabled) {
+  background: var(--border-light);
+  border-color: var(--text-muted);
+}
+
+.stepper__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepper__val {
+  min-width: 24px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+/* ── Toggle switch ─────────────────────────────────────────── */
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.toggle--on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform var(--transition), background var(--transition);
+}
+
+.toggle--on .toggle__thumb {
+  transform: translateX(18px);
+  background: #fff;
+}

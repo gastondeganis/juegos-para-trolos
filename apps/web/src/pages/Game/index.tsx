@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSocket } from "../../context/SocketContext";
-import type { GameData, Player } from "../../types";
+import type { GameData, GameState, Player, Role } from "../../types";
 import "./Game.css";
 
 // ──────────────────────────────────────────────────────────────
@@ -16,19 +16,65 @@ function playerName(players: Player[], id: string): string {
 // Sub-views
 // ──────────────────────────────────────────────────────────────
 
-/** READY / WORD_PICKING — first player picks the word */
+/** READY / WORD_PICKING — three modes based on state and role */
 function WordPickView({
+  gameState,
   isFirstPlayer,
+  word,
   onPick,
+  onAccept,
 }: {
+  gameState: GameState;
   isFirstPlayer: boolean;
+  word: string[];
   onPick: (data: Record<string, unknown>) => void;
+  onAccept: () => void;
 }) {
+  // Waiting: another player is picking or confirming
+  if (!isFirstPlayer) {
+    return (
+      <div className="game-view game-view--center">
+        <div className="spinner" />
+        <p className="game-muted">
+          {gameState === "word_picking"
+            ? "El anfitrión está confirmando la palabra…"
+            : "El anfitrión está eligiendo la palabra…"}
+        </p>
+      </div>
+    );
+  }
+
+  // Preview: word already sent, first player confirms or re-picks
+  if (gameState === "word_picking") {
+    return (
+      <div className="game-view game-view--center">
+        <p className="game-muted">La palabra para esta ronda:</p>
+        <div className="word-card">
+          <p className="word-card__label">Palabra</p>
+          {word.map((w, i) => (
+            <p key={i} className="word-card__word">{w}</p>
+          ))}
+        </div>
+        <div className="game-view__actions">
+          <button className="btn btn--primary" onClick={onAccept}>
+            Confirmar
+          </button>
+          <button className="btn btn--ghost" onClick={() => onPick({ random: true })}>
+            Cambiar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Pick: first player selects a word (state === "ready")
+  return <WordPickForm onPick={onPick} />;
+}
+
+function WordPickForm({ onPick }: { onPick: (data: Record<string, unknown>) => void }) {
   const [mode, setMode] = useState<"idle" | "custom">("idle");
   const [realWord, setRealWord] = useState("");
   const [impostorWords, setImpostorWords] = useState("");
-
-  const handleRandom = () => onPick({ random: true });
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,15 +87,6 @@ function WordPickView({
     onPick({ random: false, input_word: rw, input_impostor_words: iw });
   };
 
-  if (!isFirstPlayer) {
-    return (
-      <div className="game-view game-view--center">
-        <div className="spinner" />
-        <p className="game-muted">El primer jugador está eligiendo la palabra…</p>
-      </div>
-    );
-  }
-
   return (
     <div className="game-view">
       <h2>Elegí la palabra</h2>
@@ -57,7 +94,7 @@ function WordPickView({
 
       {mode === "idle" && (
         <div className="game-view__actions">
-          <button className="btn btn--primary" onClick={handleRandom}>
+          <button className="btn btn--primary" onClick={() => onPick({ random: true })}>
             Palabra aleatoria
           </button>
           <button className="btn btn--ghost" onClick={() => setMode("custom")}>
@@ -105,48 +142,103 @@ function WordPickView({
   );
 }
 
-/** AWAITING_ACK — everyone sees their word and must confirm */
+/** AWAITING_ACK — press-and-hold to reveal word privately, then confirm */
 function WordRevealView({
   gameData,
+  players,
   onAck,
 }: {
   gameData: GameData;
+  players: Player[];
   onAck: () => void;
 }) {
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [hasRevealed, setHasRevealed] = useState(false);
+
+  const handlePressStart = () => {
+    setIsRevealed(true);
+    setHasRevealed(true);
+  };
+  const handlePressEnd = () => setIsRevealed(false);
+
   const isImpostor = gameData.player_role === "impostor";
   const hasAcked = gameData.player_ack;
+  const acksMap = gameData.all_players_ack ?? {};
+  const ackedCount = Object.values(acksMap).filter(Boolean).length;
+  const hasWords = gameData.word && gameData.word.length > 0;
 
   return (
     <div className="game-view game-view--center">
-      <div className={`role-badge role-badge--${gameData.player_role}`}>
-        {isImpostor ? "Impostor" : "Civil"}
-      </div>
-
-      <div className="word-card">
-        <p className="word-card__label">Tu palabra</p>
-        {gameData.word.map((w, i) => (
-          <p key={i} className="word-card__word">
-            {w}
-          </p>
-        ))}
-        {isImpostor && (
-          <p className="game-muted" style={{ fontSize: "0.8rem", marginTop: 8 }}>
-            Puede haber varias variantes para confundirte
-          </p>
+      <div className="reveal-container">
+        {isRevealed ? (
+          <>
+            <div className={`role-badge role-badge--${gameData.player_role}`}>
+              {isImpostor ? "Impostor" : "Civil"}
+            </div>
+            <div className="word-card">
+              <p className="word-card__label">
+                {isImpostor ? "Tus pistas" : "Tu palabra"}
+              </p>
+              {hasWords ? (
+                gameData.word.map((w, i) => (
+                  <p key={i} className="word-card__word">{w}</p>
+                ))
+              ) : (
+                <p className="word-card__word word-card__word--hint">
+                  {isImpostor ? "Sin pistas 🕵️" : "???"}
+                </p>
+              )}
+            </div>
+            <p className="game-muted reveal-hint-text">
+              {isImpostor
+                ? "No reveles que sos el impostor"
+                : "No digas tu palabra directamente"}
+            </p>
+          </>
+        ) : (
+          <div className="reveal-placeholder">
+            <div className="reveal-placeholder__icon">🔒</div>
+            <p className="game-muted">
+              {hasRevealed ? "Palabra oculta" : "Mirá tu palabra en privado"}
+            </p>
+          </div>
         )}
       </div>
 
-      <p className="game-muted">
-        Memorizá tu palabra. No la digas directamente.
-      </p>
+      <button
+        className={`btn btn--reveal${isRevealed ? " btn--reveal--active" : ""}`}
+        onPointerDown={handlePressStart}
+        onPointerUp={handlePressEnd}
+        onPointerLeave={handlePressEnd}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {isRevealed ? "Soltá para ocultar" : "👁 Mantené para ver"}
+      </button>
 
-      {!hasAcked ? (
+      {hasRevealed && !hasAcked && (
         <button className="btn btn--primary" onClick={onAck}>
           Entendido
         </button>
-      ) : (
-        <p className="game-muted">Esperando que todos confirmen…</p>
       )}
+      {hasAcked && <p className="game-muted">Ya confirmaste ✓</p>}
+
+      <div className="game-section">
+        <h3>Confirmados ({ackedCount}/{players.length})</h3>
+        <ul className="game-player-list">
+          {players.map((p) => {
+            const acked = acksMap[p.id] ?? false;
+            return (
+              <li key={p.id} className="game-player">
+                <div className="game-player__avatar">{p.name.slice(0, 2).toUpperCase()}</div>
+                <span className="game-player__name">{p.name}</span>
+                <span className={`ack-status${acked ? " ack-status--done" : ""}`}>
+                  {acked ? "✓" : "⏳"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -167,6 +259,9 @@ function DiscussionView({
   const activePlayers = players.filter((p) =>
     gameData.active_player_ids.includes(p.id)
   );
+  const word = gameData.word ?? [];
+  const firstPlayer = players.find((p) => p.id === gameData.first_player_id);
+  const firstPlayerName = firstPlayer?.name ?? "El anfitrión";
 
   return (
     <div className="game-view">
@@ -176,11 +271,15 @@ function DiscussionView({
 
       <div className="word-card word-card--sm">
         <p className="word-card__label">Tu palabra</p>
-        {gameData.word.map((w, i) => (
-          <p key={i} className="word-card__word word-card__word--sm">
-            {w}
+        {word.length > 0 ? (
+          word.map((w, i) => (
+            <p key={i} className="word-card__word word-card__word--sm">{w}</p>
+          ))
+        ) : (
+          <p className="word-card__word word-card__word--sm" style={{ color: "var(--text-muted)" }}>
+            Sin pistas
           </p>
-        ))}
+        )}
       </div>
 
       <div className="game-section">
@@ -189,21 +288,27 @@ function DiscussionView({
           {activePlayers.map((p) => (
             <li key={p.id} className={`game-player${p.id === myID ? " game-player--self" : ""}`}>
               <div className="game-player__avatar">{p.name.slice(0, 2).toUpperCase()}</div>
-              <span>{p.name}</span>
+              <span className="game-player__name">{p.name}</span>
               {p.id === myID && <span className="pill">Vos</span>}
-              {p.host && <span className="pill pill--host">Host</span>}
+              {p.id === gameData.first_player_id && <span className="pill pill--leader">Líder</span>}
             </li>
           ))}
         </ul>
       </div>
 
-      {gameData.is_first_player && (
+      {gameData.is_first_player ? (
         <button className="btn btn--primary" onClick={onStartVoting}>
           Iniciar votación
         </button>
-      )}
-      {!gameData.is_first_player && (
-        <p className="game-muted">Discutan e intenten descubrir al impostor.</p>
+      ) : (
+        <div className="discussion-info">
+          <p className="discussion-info__leader">
+            Conduce la ronda: <strong>{firstPlayerName}</strong>
+          </p>
+          <p className="game-muted">
+            Cuando terminen de discutir, {firstPlayerName} iniciará la votación.
+          </p>
+        </div>
       )}
     </div>
   );
@@ -226,8 +331,11 @@ function VotingView({
   const activePlayers = players.filter(
     (p) => gameData.active_player_ids.includes(p.id) && p.id !== myID
   );
+  const activeCount = players.filter((p) =>
+    gameData.active_player_ids.includes(p.id)
+  ).length;
   const totalVotes = Object.values(gameData.players_votes ?? {}).reduce((a, b) => a + b, 0);
-  const allVoted = totalVotes >= activePlayers.length;
+  const allVoted = totalVotes >= activeCount;
 
   return (
     <div className="game-view">
@@ -242,7 +350,9 @@ function VotingView({
               <div className="game-player__avatar">{p.name.slice(0, 2).toUpperCase()}</div>
               <span className="game-player__name">{p.name}</span>
               {votes > 0 && (
-                <span className="vote-count">{votes} {votes === 1 ? "voto" : "votos"}</span>
+                <span className="vote-count">
+                  {votes} {votes === 1 ? "voto" : "votos"}
+                </span>
               )}
               {!gameData.player_voted && (
                 <button
@@ -263,7 +373,7 @@ function VotingView({
 
       {gameData.is_first_player && (
         <button
-          className={`btn btn--danger${allVoted ? "" : " btn--ghost"}`}
+          className={`btn${allVoted ? " btn--danger" : " btn--ghost"}`}
           onClick={onCloseElection}
         >
           Cerrar votación
@@ -273,7 +383,7 @@ function VotingView({
   );
 }
 
-/** SHOWING_RESULTS / SHOWING_RESULTS_DELETE — results of the vote */
+/** SHOWING_RESULTS_DELETE / SHOWING_RESULTS_DRAW — round result */
 function ResultsView({
   gameData,
   players,
@@ -287,7 +397,7 @@ function ResultsView({
   onNextRound: () => void;
   onRestart: () => void;
 }) {
-  const isDraw = gameData.game_state === "showing_results" && gameData.eliminated_player_ids.length > 1;
+  const isDraw = gameData.game_state === "showing_results_draw";
   const hasContinue = gameData.game_state === "showing_results_delete";
 
   return (
@@ -296,19 +406,22 @@ function ResultsView({
 
       {isDraw && (
         <>
-          <div className="result-icon result-icon--draw">⚖️</div>
-          <p className="game-muted">¡Empate! Nadie fue eliminado.</p>
-          {isFirstPlayer && (
+          <div className="result-icon">⚖️</div>
+          <p className="game-eliminated">¡Empate!</p>
+          <p className="game-muted">Nadie fue eliminado. El juego termina.</p>
+          {isFirstPlayer ? (
             <button className="btn btn--primary" onClick={onRestart}>
               Nueva partida
             </button>
+          ) : (
+            <p className="game-muted">Esperando al anfitrión…</p>
           )}
         </>
       )}
 
       {!isDraw && gameData.eliminated_player_ids.length > 0 && (
         <>
-          <div className="result-icon result-icon--eliminated">💀</div>
+          <div className="result-icon">💀</div>
           <p className="game-eliminated">
             {playerName(players, gameData.eliminated_player_ids[0])} fue eliminado
           </p>
@@ -318,34 +431,37 @@ function ResultsView({
             </button>
           )}
           {hasContinue && !isFirstPlayer && (
-            <p className="game-muted">Esperando al primer jugador…</p>
+            <p className="game-muted">Esperando al anfitrión…</p>
           )}
         </>
       )}
 
-      {gameData.eliminated_player_ids.length === 0 && (
+      {!isDraw && gameData.eliminated_player_ids.length === 0 && (
         <p className="game-muted">Calculando resultados…</p>
       )}
     </div>
   );
 }
 
-/** FINISH — game over */
+/** FINISH_CIVIL_VICTORY / FINISH_IMPOSTOR_VICTORY — game over */
 function EndView({
   gameData,
   players,
   myID,
   onRestart,
+  onGoToMenu,
 }: {
   gameData: GameData;
   players: Player[];
   myID: string;
   onRestart: () => void;
+  onGoToMenu: () => void;
 }) {
   const civilWon = gameData.game_state === "finish_civil_victory";
   const iWon =
     (civilWon && gameData.player_role === "civil") ||
     (!civilWon && gameData.player_role === "impostor");
+  const rolesMap = gameData.all_players_roles;
 
   return (
     <div className="game-view game-view--center">
@@ -362,18 +478,45 @@ function EndView({
       <div className="game-section">
         <h3>Roles revelados</h3>
         <ul className="game-player-list">
-          {players.map((p) => (
-            <li key={p.id} className={`game-player${p.id === myID ? " game-player--self" : ""}`}>
-              <div className="game-player__avatar">{p.name.slice(0, 2).toUpperCase()}</div>
-              <span>{p.name}</span>
-              {p.id === myID && <span className="pill">Vos</span>}
-            </li>
-          ))}
+          {players.map((p) => {
+            const role = rolesMap?.[p.id] as Role | undefined;
+            return (
+              <li key={p.id} className={`game-player${p.id === myID ? " game-player--self" : ""}`}>
+                <div className="game-player__avatar">{p.name.slice(0, 2).toUpperCase()}</div>
+                <span className="game-player__name">{p.name}</span>
+                {p.id === myID && <span className="pill">Vos</span>}
+                {role && (
+                  <span className={`role-badge role-badge--${role} role-badge--sm`}>
+                    {role === "civil" ? "Civil" : "Impostor"}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 
-      <button className="btn btn--primary" onClick={onRestart}>
-        Jugar de nuevo
+      <div className="game-view__actions">
+        <button className="btn btn--primary" onClick={onRestart}>
+          Jugar de nuevo
+        </button>
+        <button className="btn btn--ghost" onClick={onGoToMenu}>
+          Ir al menú
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** GAME_FINISHED — terminal, no more plays */
+function GameFinishedView({ onGoToMenu }: { onGoToMenu: () => void }) {
+  return (
+    <div className="game-view game-view--center">
+      <div className="end-icon">🏁</div>
+      <h2>Juego terminado</h2>
+      <p className="game-muted">Gracias por jugar.</p>
+      <button className="btn btn--primary" onClick={onGoToMenu}>
+        Ir al menú
       </button>
     </div>
   );
@@ -386,36 +529,57 @@ function EndView({
 const Game = () => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
-  const { gameData, playersList, isConnected, joinRoom, sendGameEvent, notification } = useSocket();
+  const {
+    gameData,
+    playersList,
+    isConnected,
+    joinRoom,
+    sendGameEvent,
+    removePlayer,
+    errorMessage,
+    clearError,
+    notification,
+  } = useSocket();
 
   const [playerID] = useState(() => localStorage.getItem("playerId") ?? "");
-  const [localPickingWord, setLocalPickingWord] = useState(false);
+  const hasAttemptedJoinRef = useRef(false);
 
-  // Reconnect: re-join the room if disconnected and reconnected
+  // Reset join flag whenever socket disconnects so we retry on next reconnect
+  useEffect(() => {
+    if (!isConnected) hasAttemptedJoinRef.current = false;
+  }, [isConnected]);
+
+  // Attempt to rejoin once per connection — avoids infinite loop caused by
+  // joinRoom resetting playersList which would re-trigger this effect
   useEffect(() => {
     if (!isConnected || !roomCode) return;
+    if (hasAttemptedJoinRef.current) return;
     const savedName = localStorage.getItem("playerName");
     const isInList = playersList.some((p) => p.id === playerID);
     if (!isInList && savedName) {
+      hasAttemptedJoinRef.current = true;
       joinRoom(savedName, roomCode);
     }
   }, [isConnected, roomCode, playersList, playerID, joinRoom]);
 
-  // If no game in progress and not reconnecting, go back to lobby
+  // Room not found or join error → go home
   useEffect(() => {
-    if (!gameData && isConnected && playersList.length > 0) {
-      navigate(`/lobby/${roomCode}`);
+    if (errorMessage) {
+      clearError();
+      navigate("/");
     }
-  }, [gameData, isConnected, playersList, roomCode, navigate]);
+  }, [errorMessage, clearError, navigate]);
 
-  // Reset localPickingWord when server acknowledges word_picking or later states
+  // If connected and confirmed in the room but no game state arrives within 2s,
+  // assume the game hasn't started yet and go back to lobby.
+  // The timeout is cancelled if gameData arrives (normal reconnect case).
   useEffect(() => {
-    if (!gameData) return;
-    const s = gameData.game_state;
-    if (s === "awaiting_ack" || s === "in_progress" || s === "voting") {
-      setLocalPickingWord(false);
-    }
-  }, [gameData]);
+    if (gameData || !isConnected) return;
+    const isInRoom = playersList.some((p) => p.id === playerID);
+    if (!isInRoom) return;
+    const t = setTimeout(() => navigate(`/lobby/${roomCode}`), 2000);
+    return () => clearTimeout(t);
+  }, [gameData, isConnected, playersList, playerID, roomCode, navigate]);
 
   if (!gameData) {
     return (
@@ -429,41 +593,32 @@ const Game = () => {
   const state = gameData.game_state;
   const isFirstPlayer = gameData.is_first_player;
 
-  const handlePick = (data: Record<string, unknown>) => {
+  const handlePick = (data: Record<string, unknown>) =>
     sendGameEvent("word_choice", data);
-  };
-
   const handleWordAccepted = () => sendGameEvent("word_accepted", {});
   const handlePlayerAcked = () => sendGameEvent("player_acked", { acked: true });
-
   const handleStartVoting = () => sendGameEvent("start_voting", {});
-
   const handleVote = (targetID: string) =>
     sendGameEvent("player_voted", { voted: true, voted_player_id: targetID });
-
   const handleCloseElection = () => sendGameEvent("election_closed", {});
-
   const handleRestart = () => sendGameEvent("restart_game", {});
+  const handleNextRound = () => sendGameEvent("word_choice", { random: true });
+  const handleGoToMenu = () => {
+    if (roomCode) removePlayer(playerID, roomCode);
+    navigate("/");
+  };
 
-  const handleNextRound = () => setLocalPickingWord(true);
-
-  // State → view routing
-  const showWordPicker =
-    state === "ready" ||
-    state === "word_picking" ||
-    (state === "showing_results_delete" && localPickingWord);
+  const showWordPicker = state === "ready" || state === "word_picking";
 
   return (
     <div className="game-page">
-      {notification && (
-        <div className="game-toast">{notification}</div>
-      )}
+      {notification && <div className="game-toast">{notification}</div>}
 
       <div className="game-header">
         <span className="game-room-code">{roomCode}</span>
       </div>
 
-      {(state === "preparation") && (
+      {state === "preparation" && (
         <div className="game-view game-view--center">
           <div className="spinner" />
           <p className="game-muted">Preparando el juego…</p>
@@ -471,16 +626,20 @@ const Game = () => {
       )}
 
       {showWordPicker && (
-        <WordPickView isFirstPlayer={isFirstPlayer} onPick={handlePick} />
+        <WordPickView
+          gameState={state}
+          isFirstPlayer={isFirstPlayer}
+          word={gameData.word ?? []}
+          onPick={handlePick}
+          onAccept={handleWordAccepted}
+        />
       )}
 
       {state === "awaiting_ack" && (
         <WordRevealView
           gameData={gameData}
-          onAck={() => {
-            handleWordAccepted();
-            handlePlayerAcked();
-          }}
+          players={playersList}
+          onAck={handlePlayerAcked}
         />
       )}
 
@@ -503,7 +662,7 @@ const Game = () => {
         />
       )}
 
-      {(state === "showing_results" || state === "showing_results_delete") && !localPickingWord && (
+      {(state === "showing_results_draw" || state === "showing_results_delete") && (
         <ResultsView
           gameData={gameData}
           players={playersList}
@@ -519,7 +678,12 @@ const Game = () => {
           players={playersList}
           myID={playerID}
           onRestart={handleRestart}
+          onGoToMenu={handleGoToMenu}
         />
+      )}
+
+      {state === "game_finished" && (
+        <GameFinishedView onGoToMenu={handleGoToMenu} />
       )}
     </div>
   );

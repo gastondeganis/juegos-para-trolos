@@ -277,6 +277,104 @@
   color: var(--danger);
 }
 
+/* ── Press-and-hold reveal ─────────────────────────────────── */
+.reveal-container {
+  width: 100%;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+}
+
+.reveal-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.reveal-placeholder__icon {
+  font-size: 2.5rem;
+  opacity: 0.4;
+}
+
+.reveal-hint-text {
+  font-size: 0.8rem;
+}
+
+.btn--reveal {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-light);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  width: 100%;
+  padding: 16px;
+  font-size: 1rem;
+}
+
+.btn--reveal--active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-accent);
+}
+
+.word-card__word--hint {
+  color: var(--text-muted);
+  font-size: 1.4rem;
+}
+
+/* ── Leader pill ────────────────────────────────────────────── */
+.pill--leader {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* ── Discussion info (non-leader) ───────────────────────────── */
+.discussion-info {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  text-align: center;
+}
+
+.discussion-info__leader {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.discussion-info__leader strong {
+  color: var(--text-heading);
+}
+
+/* ── ACK status ────────────────────────────────────────────── */
+.ack-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.ack-status--done {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+/* ── Small role badge (inline in player list) ───────────────── */
+.role-badge--sm {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+}
+
 /* ── Toast ─────────────────────────────────────────────────── */
 .game-toast {
   position: fixed;

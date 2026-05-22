@@ -7,9 +7,9 @@ import React, {
 } from "react";
 import { connectSocket, sendMessage } from "../services/socket";
 import { getOrCreatePlayerId } from "../services/utils";
-import type { Player, GameData } from "../types";
+import type { Player, GameData, GameConfig } from "../types";
 
-export type { Player, GameData };
+export type { Player, GameData, GameConfig };
 
 interface SocketContextType {
   socket: WebSocket | null;
@@ -19,10 +19,12 @@ interface SocketContextType {
   notification: string;
   isConnected: boolean;
   gameData: GameData | null;
+  gameConfig: GameConfig;
   createRoom: (name: string) => void;
   joinRoom: (name: string, code: string) => void;
   removePlayer: (playerID: string, roomCode: string) => void;
   startGame: () => void;
+  setGameConfig: (config: GameConfig) => void;
   sendGameEvent: (event: string, data?: Record<string, unknown>) => void;
   clearError: () => void;
 }
@@ -35,6 +37,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [notification, setNotification] = useState("");
   const [gameData, setGameData] = useState<GameData | null>(null);
+  const [gameConfig, setGameConfig] = useState<GameConfig>({
+    impostorCount: 1,
+    showImpostorWords: false,
+  });
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -96,11 +102,15 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     connect();
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        const s = socketRef.current;
-        if (!s || s.readyState === WebSocket.CLOSED || s.readyState === WebSocket.CLOSING) {
-          connect();
-        }
+      if (document.visibilityState !== "visible") return;
+      const s = socketRef.current;
+      if (!s || s.readyState === WebSocket.CLOSED || s.readyState === WebSocket.CLOSING) {
+        // Socket died while tab was hidden (phone lock > 60s) — reconnect
+        connect();
+      } else if (s.readyState === WebSocket.OPEN) {
+        // Socket still open — send ping immediately to reset backend ReadDeadline
+        // and verify the connection is actually alive
+        sendMessage(s, "ping", {});
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -151,7 +161,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const startGame = () => {
-    if (socketRef.current) sendMessage(socketRef.current, "start_game", {});
+    if (socketRef.current) {
+      sendMessage(socketRef.current, "start_game", {
+        impostor_count: gameConfig.impostorCount,
+        show_impostor_words: gameConfig.showImpostorWords,
+      });
+    }
   };
 
   const sendGameEvent = (event: string, data: Record<string, unknown> = {}) => {
@@ -168,10 +183,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         notification,
         isConnected,
         gameData,
+        gameConfig,
         createRoom,
         joinRoom,
         removePlayer,
         startGame,
+        setGameConfig,
         sendGameEvent,
         clearError,
       }}

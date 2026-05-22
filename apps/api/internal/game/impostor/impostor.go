@@ -124,6 +124,8 @@ func (i *Impostor) wordChoice(data json.RawMessage) error {
 		} else {
 			if i.Config.ShowImpostorWords {
 				p.Word = w.ImpostorWords
+			} else {
+				p.Word = []string{}
 			}
 		}
 		i.Players[id] = p
@@ -164,14 +166,20 @@ func (i *Impostor) GetGameState(playerID string) game.GameData {
 		}
 	}
 
+	word := p.Word
+	if word == nil {
+		word = []string{}
+	}
+
 	return DataResponse{
 		GameState:           i.State,
 		PlayerRole:          p.Role,
 		PlayerAck:           i.PlayersAck[playerID],
 		PlayerVoted:         i.PlayersHasVoted[playerID],
 		PlayersVotes:        i.VotesPerPlayer,
-		Word:                p.Word,
+		Word:                word,
 		IsFirstPlayer:       i.FirstPlayerID == playerID,
+		FirstPlayerID:       i.FirstPlayerID,
 		EliminatedPlayerIDs: eliminatedIDs,
 		ActivePlayerIDs:     activePlayerIDs,
 		AllPlayersAck:       allAcks,
