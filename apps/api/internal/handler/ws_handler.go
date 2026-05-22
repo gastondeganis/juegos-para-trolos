@@ -126,7 +126,22 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			currentRoom.Game = &impostor.Impostor{}
+			var cfg internalws.StartGameData
+			if err := json.Unmarshal(msg.Data, &cfg); err != nil {
+				log.Println("start_game: bad config, using defaults:", err)
+			}
+
+			impostorCount := cfg.ImpostorCount
+			if impostorCount == 0 {
+				impostorCount = 1
+			}
+
+			currentRoom.Game = &impostor.Impostor{
+				Config: impostor.GameConfig{
+					ImpostorCount:     impostorCount,
+					ShowImpostorWords: cfg.ShowImpostorWords,
+				},
+			}
 
 			err := currentRoom.Game.Start(currentRoom.Players)
 			if err != nil {
@@ -134,7 +149,6 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			// 3. Avisamos a todos del nuevo estado
 			BroadcastGameState(currentRoom)
 
 		case "player_left":

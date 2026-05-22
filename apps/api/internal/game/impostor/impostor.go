@@ -84,8 +84,8 @@ func (i *Impostor) HandleMessage(playerID string, event string, data json.RawMes
 }
 
 func (i *Impostor) wordChoice(data json.RawMessage) error {
-	if !((i.State == GAME_READY) || (i.State == WORD_PICKING)) {
-		return fmt.Errorf("game state should be GAME_PREPARATION but got %s", i.State)
+	if !((i.State == GAME_READY) || (i.State == WORD_PICKING) || (i.State == SHOWING_RESULT_CONTINUE)) {
+		return fmt.Errorf("game state should be GAME_READY, WORD_PICKING or SHOWING_RESULT_CONTINUE but got %s", i.State)
 	}
 
 	i.State = WORD_PICKING
@@ -147,6 +147,23 @@ func (i *Impostor) GetGameState(playerID string) game.GameData {
 	eliminatedIDs := make([]string, len(i.PlayersToDelete))
 	copy(eliminatedIDs, i.PlayersToDelete)
 
+	allAcks := make(map[string]bool, len(i.PlayersAck))
+	for id, acked := range i.PlayersAck {
+		allAcks[id] = acked
+	}
+
+	isTerminal := i.State == FINISH_CIVIL_VICTORY ||
+		i.State == FINISH_IMPOSTOR_VICTORY ||
+		i.State == SHOWING_RESULT_DRAW ||
+		i.State == GAME_FINISHED
+	var allRoles map[string]string
+	if isTerminal {
+		allRoles = make(map[string]string, len(i.Players))
+		for id, gp := range i.Players {
+			allRoles[id] = string(gp.Role)
+		}
+	}
+
 	return DataResponse{
 		GameState:           i.State,
 		PlayerRole:          p.Role,
@@ -157,6 +174,8 @@ func (i *Impostor) GetGameState(playerID string) game.GameData {
 		IsFirstPlayer:       i.FirstPlayerID == playerID,
 		EliminatedPlayerIDs: eliminatedIDs,
 		ActivePlayerIDs:     activePlayerIDs,
+		AllPlayersAck:       allAcks,
+		AllPlayersRoles:     allRoles,
 	}
 }
 

@@ -22,3 +22,8 @@ type LeaveRoomData struct {
 	PlayerID string `json:"player_id"`
 	RoomCode string `json:"room_code"`
 }
+
+type StartGameData struct {
+	ImpostorCount     uint8 `json:"impostor_count"`
+	ShowImpostorWords bool  `json:"show_impostor_words"`
+}
