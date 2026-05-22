@@ -1,0 +1,47 @@
+apps/web/src/pages/Lobby/Lobby.css
+  s_cb46670fb982b9::t_18a1cd28a086f5 178-285
+apps/api/internal/handler/ws_handler.go
+  s_cb46670fb982b9::t_3a65d9ea1932bd 124-135
+apps/web/src/types/index.ts
+  s_cb46670fb982b9::t_1f3b270d6a1e1e 14,17-18,33-39
+  s_cb46670fb982b9::t_c894a3a3174210 30
+apps/web/src/pages/Game/Game.css
+  s_cb46670fb982b9::t_b920834f80b9d5 280-330
+  s_cb46670fb982b9::t_6500111b1e5006 331-359
+  s_cb46670fb982b9::t_6e5aae7a31a8c9 360-377
+apps/api/internal/game/impostor/impostor.go
+  s_cb46670fb982b9::t_964297bf2b04e1 127-128
+  s_cb46670fb982b9::t_23a8aeaf434953 169-173,180,182
+apps/web/src/context/SocketContext.tsx
+  s_cb46670fb982b9::t_3093a49dd00930 164-169
+  s_cb46670fb982b9::t_bfaa989667bd95 186,191
+  s_cb46670fb982b9::t_c0f58733937831 10,12,22,27
+  s_cb46670fb982b9::t_e8c77905eadd05 40-43
+  s_cb46670fb982b9::t_0e9148b00fdb18 105-113
+apps/web/src/pages/Lobby/index.tsx
+  s_cb46670fb982b9::t_b9584777961cd1 114-170
+  s_cb46670fb982b9::t_5ae4c37cbc57e7 19-20
+apps/web/src/pages/Game/index.tsx
+  s_cb46670fb982b9::t_b60cb4e86cb6e8 1
+  s_cb46670fb982b9::t_f6a8e8a5304e11 4,19,21,23,25,27,29,31,33-74,97,148,152,166-167,224-241,291,299,303,334-336,338,353-355,376,386,400,409-412,416-417,424,434,439,446,452,458,464,481-495,499-519,532-538,541-542,596,605-609,611,615,621,629-635,641-642,665,681,684-686
+  s_cb46670fb982b9::t_230a9fcc2c2e9c 539-540,545,547-553,556,560,565,567-569,571
+  s_cb46670fb982b9::t_cf20cc8778fe3c 573-575,577-582
+  s_cb46670fb982b9::t_5f18d635b41a7d 262-264,274-280,282,293,304-311
+  s_cb46670fb982b9::t_fbb6b52fe59741 145,155-163,168,172-204,208-216,218,223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "f40d284fd0e6f67c440cddbbda01f93723be4577",
+  "prompts": {},
+  "sessions": {
+    "s_cb46670fb982b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4530d11e-3b1a-47e0-a951-76468242cc42",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "gastondeganis <gastondeganis@gmail.com>"
+    }
+  }
+}
